@@ -1,8 +1,24 @@
 use libc::*;
 use ptr::*;
 use str::*;
+use lua::*;
 
-extern mod lua {
+pub use lua_atpanic, lua_call, lua_checkstack, lua_close, lua_concat, lua_cpcall, lua_createtable,
+	lua_dump, lua_equal, lua_error, lua_gc, lua_getallocf, lua_getfenv, lua_getfield, lua_getglobal,
+	lua_getmetatable, lua_gettable, lua_gettop, lua_insert, lua_isboolean, lua_iscfunction,
+	lua_isfunction, lua_islightuserdata, lua_isnil, lua_isnone, lua_isnoneornil, lua_isnumber,
+	lua_isstring, lua_istable, lua_isthread, lua_isuserdata, lua_lessthan, lua_load, lua_newstate,
+	lua_newtable, lua_newthread, lua_newuserdata, lua_next, lua_objlen, lua_pcall, lua_pop,
+	lua_pushboolean, lua_pushcclosure, lua_pushcfunction, lua_pushfstring, lua_pushinteger,
+	lua_pushlightuserdata, lua_pushliteral, lua_pushlstring, lua_pushnil, lua_pushnumber,
+	lua_pushstring, lua_pushthread, lua_pushvalue, lua_pushvfstring, lua_rawequal, lua_rawget,
+	lua_rawgeti, lua_rawset, lua_rawseti, lua_register, lua_remove, lua_replace, lua_resume,
+	lua_setallocf, lua_setfenv, lua_setfield, lua_setglobal, lua_setmetatable, lua_settable,
+	lua_settop, lua_status, lua_toboolean, lua_tocfunction, lua_tointeger, lua_tolstring,
+	lua_tonumber, lua_topointer, lua_tostring, lua_tothread, lua_touserdata, lua_type,
+	lua_typename, lua_xmove, lua_yield;
+
+pub extern mod lua {
 	fn lua_atpanic(L: LuaState, panicf: LuaCFunction) -> LuaCFunction;
 	fn lua_call(L: LuaState, nargs: c_int, nresults: c_int) -> c_void;
 	fn lua_checkstack(L: LuaState, extra: c_int) -> c_int;
@@ -82,57 +98,9 @@ extern mod lua {
 	fn lua_typename(L: LuaState, tp: c_int) -> *c_char;
 	fn lua_xmove(from: LuaState, to: LuaState, n: c_int) -> c_void;
 	fn lua_yield(L: LuaState, nresults: c_int) -> c_int;
-	
-	
-//	fn luaL_addchar(B: LuaLBuffer, c: c_char) -> c_void;
-	fn luaL_addlstring(B: LuaLBuffer, s: *c_char, l: size_t) -> c_void;
-//	fn luaL_addsize(B: LuaLBuffer, n: size_t) -> c_void;
-	fn luaL_addstring(B: LuaLBuffer, s: *c_char) -> c_void;
-	fn luaL_addvalue(B: LuaLBuffer) -> c_void;
-//	fn luaL_argcheck(L: LuaState, cond: c_int, narg: c_int, extramsg: *c_char) -> c_void;
-	fn luaL_argerror(L: LuaState, narg: c_int, extramsg: *c_char) -> c_void;
-	fn luaL_buffinit(L: LuaState, B: LuaLBuffer) -> c_void;
-	fn luaL_callmeta(L: LuaState, obj: c_int, e: *c_char) -> c_int;
-	fn luaL_checkany(L: LuaState, narg: c_int) -> c_void;
-//	fn luaL_checkint(L: LuaState, narg: c_int) -> c_int;
-	fn luaL_checkinteger(L: LuaState, narg: c_int) -> LuaInteger;
-//	fn luaL_checklong(L: LuaState, narg: c_int) -> c_long;
-//	fn luaL_checklstring(L: LuaState, narg: c_int, l: *size_t) -> *c_char;
-	fn luaL_checknumber(L: LuaState, narg: c_int) -> LuaNumber;
-	fn luaL_checkoption(L: LuaState, narg: c_int, def: *c_char, lst: **c_char) -> c_int;
-	fn luaL_checkstack(L: LuaState, sz: c_int, msg: *c_char) -> c_void;
-//	fn luaL_checkstring(L: LuaState, narg: c_int) -> *c_char;
-	fn luaL_checktype(L: LuaState, narg: c_int, t: c_int) -> c_void;
-	fn luaL_checkudata(L: LuaState, narg: c_int, tname: *c_char) -> c_void;
-//	fn luaL_dofile(L: LuaState, filename: *c_char) -> c_int; <- MACRO, equal to (luaL_loadfile(L, filename) || lua_pcall(L, 0, LUA_MULTRET, 0))
-//	fn luaL_dostring(L: LuaState, str: *c_char) -> c_int; <- MACRO, equal to (luaL_loadstring(L, str) || lua_pcall(L, 0, LUA_MULTRET, 0))
-	fn luaL_error(L: LuaState, fmt: *c_char) -> c_int; // FIXME: should accept varargs
-	fn luaL_getmetafield(L: LuaState, obj: c_int, e: *c_char) -> c_int;
-//	fn luaL_getmetatable(L: LuaState, tname: *c_char) -> c_void;
-	fn luaL_gsub(L: LuaState, s: *c_char, p: *c_char, r: *c_char) -> *c_char;
-	fn luaL_loadbuffer(L: LuaState, buff: *c_char, sz: size_t, name: *c_char) -> c_int;
-	fn luaL_loadfile(L: LuaState, filename: *c_char) -> c_int;
-	fn luaL_loadstring(L: LuaState, s: *c_char) -> c_int;
-	fn luaL_newmetatable(L: LuaState, tname: *c_char) -> c_int;
-	fn luaL_newstate() -> LuaState;
-	fn luaL_openlibs(L: LuaState) -> c_void;
-//	fn luaL_optint(L: LuaState, narg: c_int, d: c_int) -> c_int;
-	fn luaL_optinteger(L: LuaState, narg: c_int, d: LuaInteger) -> LuaInteger;
-//	fn luaL_optlong(L: LuaState, narg: c_int, d: c_long) -> c_long;
-	fn luaL_optlstring(L: LuaState, narg: c_int, d: *c_char, l: *size_t) -> *c_char;
-	fn luaL_optnumber(L: LuaState, narg: c_int, d: LuaNumber) -> LuaNumber;
-//	fn luaL_optstring(L: LuaState, narg: c_int, d: *c_char) -> *c_char;
-	fn luaL_prepbuffer(B: LuaLBuffer) -> *c_char;
-	fn luaL_pushresult(B: LuaLBuffer) -> c_void;
-	fn luaL_ref(L: LuaState, t: c_int) -> c_int;
-	fn luaL_register(L: LuaState, libname: *c_char, l: LuaLReg) -> c_void;
-//	fn luaL_typename(L: LuaState, index: c_int) -> *c_char;
-	fn luaL_typerror(L: LuaState, narg: c_int, tname: *c_char) -> c_int;
-	fn luaL_unref(L: LuaState, t: c_int, rf: c_int) -> c_void;
-	fn luaL_where(L: LuaState, lvl: c_int) -> c_void;
 }
 
-use lua::*;
+
 
 const LUA_MULTRET: c_int = (-1);
 
@@ -178,12 +146,6 @@ type LuaReader = fn (L: LuaState, data: *c_void, size: size_t) -> *c_char;
 type LuaState = *c_void;
 type LuaWriter = fn (L: LuaState, p: *c_void, sz: size_t, ud: *c_void) -> c_int;
 
-type LuaLBuffer = *c_void;
-type LuaLReg = *_LuaLReg;
-struct _LuaLReg {
-	name: *c_char,
-	func: LuaCFunction
-}
 
 fn lua_pop(L: LuaState, n: c_int) -> c_void {
 	lua_settop(L, -(n)-1)
@@ -255,43 +217,4 @@ fn lua_tostring(L: LuaState, index: c_int) -> *c_char {
 	lua_tolstring(L, index, ptr::null())
 }
 
-/*
-enum LuaValue {
-	TNil,
-	TBoolean(bool),
-	TLightUserData,
-	TNumber(LuaNumber),
-	TString(~str),
-	TTable,
-	TFunction,
-	TUserData,
-	TThread
-}
 
-trait LuaParam {
-	fn push(L: LuaState);
-}
-*/
-
-/*
-fn runLuaWithParams(L: LuaState,params: ~[LuaParam]) -> int {
-	for vec::each(params) |param| {
-		param.push(L);
-	};
-	lua::lua_pcall(L, 0, -1, 0) as int
-}
-*/
-
-fn main() {
-	let L: LuaState = lua::luaL_newstate();
-	io::println("Hello world");
-	io::println(fmt!("L = %b",is_not_null(L)));
-	io::println("Now, let's load hello.lua");
-	let loadresult = str::as_c_str("hello.lua",{|s| lua::luaL_loadfile(L, s)}) as int;
-	io::println(fmt!("Result of loading: %d", loadresult));
-	lua::luaL_openlibs(L);
-	let pcallresult = lua::lua_pcall(L, 0, -1, 0) as int;
-	io::println(fmt!("Result of pcall: %d", pcallresult));
-//	runLuaWithParams(L,~[]);
-	
-}
