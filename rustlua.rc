@@ -1,0 +1,14 @@
+#[desc = "Bindings for Rust to Lua5.1"];
+#[licence = "BSD"];
+#[author = "Thiez"];
+
+#[link(	name = "lua_raw",
+		vers = "0.1")];
+
+#[path = "lua_raw.rs"]
+mod lua_raw;
+#[path = "lua_wrapper.rs"]
+mod lua_wrapper;
+#[path = "rustlua.rs"]
+mod rustlua;
+
