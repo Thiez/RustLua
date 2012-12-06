@@ -1,4 +1,5 @@
 use lua_raw::*;
+use std::map::*;
 
 pub use LuaStack, createLuaStack;
 
@@ -20,9 +21,13 @@ struct LuaStack {
 
 impl LuaStack {
 	fn hi() { io::println("Hello world"); }
-	fn push<T: LuaStackItem>(item: &T) { item.push(self.state) }
+	fn push<T: LuaStackItem>(item: &T) { (*item).push(self.state) }
+	
+	fn call(nargs: int, results: int) {
+		lua_call(self.state, nargs as c_int, results as c_int)
+	}
 	fn pcall(nargs: int, results: int) -> int {
-			lua_pcall(self.state, nargs as c_int, results as c_int, 0) as int
+		lua_pcall(self.state, nargs as c_int, results as c_int, 0) as int
 	}
 	fn openlibs() { luaL_openlibs(self.state) }
 	fn loadFile(file: &str) {
@@ -35,8 +40,6 @@ impl LuaStack {
 fn createLuaStack() -> LuaStack {
 	LuaStack { state: luaL_newstate() }
 }
-
-
 
 enum LuaType {
 	None = -1,
@@ -66,7 +69,7 @@ impl int : LuaStackItem {
 	fn push(state: LuaState) { lua_pushinteger(state,LuaInteger(self)) }
 }
 
-impl float : LuaStackItem {
+impl float : LuaStackItem{
 	fn luaType() -> LuaType { Number }
 	fn push(state: LuaState) { (self as c_double).push(state) }
 }
@@ -90,3 +93,16 @@ impl &str : LuaStackItem {
 	fn luaType() -> LuaType { String }
 	fn push(state: LuaState) { str::as_c_str(self,{|s| lua_pushstring(state, s)}) }
 }
+
+/*impl Map<LuaStackItem,LuaStackItem> : LuaStackItem {
+	fn luaType() -> LuaType { Table }
+	fn push(state: LuaState) {
+		lua_newtable(state);
+		for self.each |key,value| {
+			key.push(state);
+			value.push();
+			lua_settable(state,-2);
+			true
+		}
+	}
+}*/

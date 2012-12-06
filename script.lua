@@ -1,4 +1,6 @@
 io.write("The table the script received has:\n");
+print(#foo)
+print("ha!")
 x = 0
 for i = 1, #foo do
 	print(i, foo[i])

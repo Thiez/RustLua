@@ -1,8 +1,5 @@
-use libc::*;
-use ptr::*;
-use str::*;
+use libc::{c_char,c_double,c_int,c_long,c_void,size_t,strlen};
 use lua::*;
-
 
 pub use lua_atpanic, lua_call, lua_checkstack, lua_close, lua_concat, lua_cpcall, lua_createtable,
 	lua_dump, lua_equal, lua_error, lua_gc, lua_getallocf, lua_getfenv, lua_getfield, lua_getglobal,
@@ -364,5 +361,17 @@ fn luaL_typename(L: LuaState, index: c_int) -> *c_char {
 	lua_typename(L, lua_type(L, index))
 }
 
-
-
+/*fn main() {
+	let L: LuaState = lua::luaL_newstate();
+	io::println("Hello world");
+	io::println(fmt!("L = %b",is_not_null(L)));
+	io::println("Now, let's load hello.lua");
+	let loadresult = str::as_c_str("hello.lua",{|s| lua::luaL_loadfile(L, s)}) as int;
+	io::println(fmt!("Result of loading: %d", loadresult));
+	lua::luaL_openlibs(L);
+	let pcallresult = lua::lua_pcall(L, 0, -1, 0) as int;
+	io::println(fmt!("Result of pcall: %d", pcallresult));
+//	runLuaWithParams(L,~[]);
+	
+}
+*/
