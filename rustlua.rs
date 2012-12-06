@@ -19,15 +19,16 @@ fn main() {
 	S.openlibs();
 	S.loadFile("script.lua");
 	lua_newtable(S.state);
-	lua_pushinteger(S.state, LuaInteger(1));
-	lua_pushinteger(S.state, LuaInteger(1));
-	lua_rawset(S.state,-3);
-	lua_pushinteger(S.state, LuaInteger(2));
-	lua_pushinteger(S.state, LuaInteger(1));
-	lua_rawset(S.state,-3);
-	lua_pushinteger(S.state, LuaInteger(3));
-	lua_pushinteger(S.state, LuaInteger(2));
-	lua_rawset(S.state,-3);
-	str::as_c_str("foo",|cstr| lua_setglobal(S.state,cstr));
+//	lua_pushinteger(S.state, 1);
+//	lua_pushinteger(S.state, 1);
+	for int::range(1,5) |n| {
+		S.pushi(n);
+		S.pushi(n*n);
+		lua_rawset(S.state,-3);
+	};
+
+	str::as_c_str("foo", {|x| lua_setglobal(S.state,x)});
+	str::as_c_str("magics!",{|x| lua_pushstring(S.state,x)});
+	str::as_c_str("magic", {|x| lua_setglobal(S.state,x)});
 	S.pcall(0,-1);
 }

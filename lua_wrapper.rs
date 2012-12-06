@@ -21,8 +21,46 @@ struct LuaStack {
 
 impl LuaStack {
 	fn hi() { io::println("Hello world"); }
-	fn push<T: LuaStackItem>(item: &T) { (*item).push(self.state) }
-	
+	fn pushi<T: LuaConvert>(item: T) {
+		self.push(item.toLuaItem())
+	}
+	fn push(item: LuaStackItem) {
+		match item {
+		LuaNone => fail ~"Cannot push None!",
+		LuaNil => lua_pushnil(self.state),
+		LuaBool(b) => lua_pushboolean(self.state,b as c_int),
+		LuaLightUserData(v) => lua_pushlightuserdata(self.state,v),
+		LuaNumber(n) => lua_pushnumber(self.state,n),
+		LuaString(s) => str::as_c_str(s,|x| lua_pushstring(self.state,x)),
+		LuaTable(_) => fail ~"Pushing table not yet implemented",
+		LuaFunction(_) => fail ~"Pushing function not yet implemented",
+		LuaUserData(_) => fail ~"Pushing userdata not yet implemented",
+		LuaThread(_) => fail ~"Pushing thread not yet implemented"
+		};
+	}
+	fn pop() -> LuaStackItem {
+		let n = lua_gettop(self.state);
+		if (n < 1) {
+			LuaNone
+		} else {
+			let result =
+			match lua_type(self.state,n) {
+				LUA_TNONE => LuaNone,
+				LUA_TNIL => LuaNil,
+				LUA_TBOOLEAN => LuaBool( lua_toboolean(self.state,n) == 1 ),
+				LUA_TLIGHTUSERDATA => LuaLightUserData( lua_touserdata(self.state,n) ),
+				LUA_TNUMBER => fail,
+				LUA_TSTRING => fail,
+				LUA_TTABLE => fail,
+				LUA_TFUNCTION => fail,
+				LUA_TUSERDATA => LuaUserData( lua_touserdata(self.state,n) ),
+				LUA_TTHREAD => LuaThread( LuaStack{ state: lua_tothread(self.state,n) } ),
+				_ => LuaNone
+			};
+			lua_pop(self.state,1);
+			result
+		}
+	}
 	fn call(nargs: int, results: int) {
 		lua_call(self.state, nargs as c_int, results as c_int)
 	}
@@ -36,73 +74,45 @@ impl LuaStack {
 	}
 }
 
-
 fn createLuaStack() -> LuaStack {
 	LuaStack { state: luaL_newstate() }
 }
 
-enum LuaType {
-	None = -1,
-	Nil = 0,
-	Bool = 1,
-	LightUserData = 2,
-	Number = 3,
-	String = 4,
-	Table = 5,
-	Function = 6,
-	UserData = 7,
-	Thread = 8
+enum LuaStackItem {
+	LuaNone,
+	LuaNil,
+	LuaBool(bool),
+	LuaLightUserData(*c_void),
+	LuaNumber(LuaNumber),
+	LuaString(@str),
+	LuaTable(c_void),
+	LuaFunction(c_void),
+	LuaUserData(*c_void),
+	LuaThread(LuaStack)
 }
 
-trait LuaStackItem {
-	fn luaType() -> LuaType;
-	fn push(state: LuaState);
+trait LuaConvert {
+	fn toLuaItem() -> LuaStackItem;
 }
 
-impl bool : LuaStackItem {
-	fn luaType() -> LuaType { Bool }
-	fn push(state: LuaState) { lua_pushboolean(state,self as c_int) }
+impl uint : LuaConvert {
+	fn toLuaItem() -> LuaStackItem { LuaNumber(self as LuaNumber) }
 }
 
-impl int : LuaStackItem {
-	fn luaType() -> LuaType { Number }
-	fn push(state: LuaState) { lua_pushinteger(state,LuaInteger(self)) }
+impl int : LuaConvert {
+	fn toLuaItem() -> LuaStackItem { LuaNumber(self as LuaNumber) }
 }
 
-impl float : LuaStackItem{
-	fn luaType() -> LuaType { Number }
-	fn push(state: LuaState) { (self as c_double).push(state) }
+impl float : LuaConvert {
+	fn toLuaItem() -> LuaStackItem { LuaNumber(self as LuaNumber) }
 }
 
-impl c_double : LuaStackItem {
-	fn luaType() -> LuaType { Number }
-	fn push(state: LuaState) { LuaNumber(self).push(state) }
+impl bool : LuaConvert {
+	fn toLuaItem() -> LuaStackItem { LuaBool(self) }
 }
 
-impl LuaNumber : LuaStackItem {
-	fn luaType() -> LuaType { Number }
-	fn push(state: LuaState) { lua_pushnumber(state,self) }
+impl @str : LuaConvert {
+	fn toLuaItem() -> LuaStackItem { LuaString(copy self) }
 }
 
-impl () : LuaStackItem {
-	fn luaType() -> LuaType { Nil }
-	fn push(state: LuaState) { lua_pushnil(state) }
-}
 
-impl &str : LuaStackItem {
-	fn luaType() -> LuaType { String }
-	fn push(state: LuaState) { str::as_c_str(self,{|s| lua_pushstring(state, s)}) }
-}
-
-/*impl Map<LuaStackItem,LuaStackItem> : LuaStackItem {
-	fn luaType() -> LuaType { Table }
-	fn push(state: LuaState) {
-		lua_newtable(state);
-		for self.each |key,value| {
-			key.push(state);
-			value.push();
-			lua_settable(state,-2);
-			true
-		}
-	}
-}*/

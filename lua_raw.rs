@@ -198,8 +198,8 @@ const LUA_GCSETSTEPMUL: c_int = 7;
 
 type LuaAlloc = fn (ud: *c_void, ptr: *c_void, osize: size_t, nsize: size_t) -> *c_void;
 type LuaCFunction = fn (L: LuaState) -> c_int;
-enum LuaInteger = int;	// Int in rust should be same size as ptrdiff_t
-enum LuaNumber = c_double;
+type LuaInteger = int;	// Int in rust should be same size as ptrdiff_t
+type LuaNumber = c_double;
 type LuaReader = fn (L: LuaState, data: *c_void, size: size_t) -> *c_char;
 type LuaState = *c_void;
 type LuaWriter = fn (L: LuaState, p: *c_void, sz: size_t, ud: *c_void) -> c_int;
@@ -320,11 +320,11 @@ fn luaL_argcheck(L: LuaState, cond: c_int, narg: c_int, extramsg: *c_char)  {
 }
 
 fn luaL_checkint(L: LuaState, narg: c_int) -> c_int {
-	*luaL_checkinteger(L,narg) as c_int
+	luaL_checkinteger(L,narg) as c_int
 }
 
 fn luaL_checklong(L: LuaState, narg: c_int) -> c_long {
-	*luaL_checkinteger(L,narg) as c_long
+	luaL_checkinteger(L,narg) as c_long
 }
 
 fn luaL_checkstring(L: LuaState, narg: c_int) -> *c_char {
@@ -346,11 +346,11 @@ fn luaL_getmetatable(L: LuaState, tname: *c_char)  {
 }
 
 fn luaL_optint(L: LuaState, narg: c_int, d: c_int) -> c_int {
-	*luaL_optinteger(L, narg, LuaInteger(d as int)) as c_int
+	luaL_optinteger(L, narg, d as LuaInteger) as c_int
 }
 
 fn luaL_optlong(L: LuaState, narg: c_int, d: c_long) -> c_long {
-	*luaL_optinteger(L, narg, LuaInteger(d as int)) as c_long
+	luaL_optinteger(L, narg, d as LuaInteger) as c_long
 }
 
 fn luaL_optstring(L: LuaState, narg: c_int, d: *c_char) -> *c_char {
