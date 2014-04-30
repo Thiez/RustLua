@@ -11,6 +11,7 @@ pub struct LuaStack {
   pub state: lua_raw::LuaState
 }
 
+#[allow(dead_code)]
 impl LuaStack {
   pub fn new() -> LuaStack {
     unsafe {
@@ -37,7 +38,7 @@ impl LuaStack {
   }
   pub fn pop(&mut self) -> LuaStackItem {
     let n = unsafe { lua_raw::lua_gettop(self.state) };
-    if (n < 1) {
+    if n < 1 {
       LuaNone
     } else {
       let result =
@@ -69,7 +70,9 @@ impl LuaStack {
   }
   pub fn loadFile(&mut self, file: &str) {
     let loadresult = file.with_c_str(|fname|unsafe{lua_raw::luaL_loadfile(self.state, fname) as int});
-    if (loadresult != 0) { fail!("Some failure reading file") }
+    if loadresult != 0 {
+      fail!("Some failure reading file")
+    }
   }
 }
 
